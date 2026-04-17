@@ -2,7 +2,7 @@ library(dplyr)
 library(tidyr)
 
 # Argument 1: coupling trial CSV. Argument 2: output directory.
-default_input <- "data/processed/automaticity_trial_coupling_data.csv"
+default_input <- "outputs/Trial_decoupling/automaticity_trial_coupling_data.csv"
 default_output_dir <- "outputs/Trial_decoupling"
 
 args <- commandArgs(trailingOnly = TRUE)

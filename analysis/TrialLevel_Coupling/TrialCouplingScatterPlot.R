@@ -2,7 +2,7 @@ library(dplyr)
 library(ggplot2)
 
 
-default_input <- "data/processed/automaticity_trial_coupling_data.csv"
+default_input <- "outputs/Trial_decoupling/automaticity_trial_coupling_data.csv"
 default_output <- "outputs/Trial_decoupling/automaticity_trial_coupling_scatter.png"
 
 args <- commandArgs(trailingOnly = TRUE)

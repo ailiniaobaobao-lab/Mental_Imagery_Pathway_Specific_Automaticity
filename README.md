@@ -1,6 +1,10 @@
 # Mental_Imagery_Pathway_Specific_Automaticity
 
-Code repository for my honors thesis: *Pathway-Specific Signatures in Visual Mental Imagery: Pupil and Gaze Measures During Occlusion*.
+Code repository for my honors thesis:
+
+> **Honors Thesis**
+> 
+> *Pathway-Specific Signatures in Visual Mental Imagery: Pupil and Gaze Measures During Occlusion*
 
 This project tests whether internally generated visual representations during temporary occlusion differ in automaticity across two dimensions:
 
@@ -8,6 +12,8 @@ This project tests whether internally generated visual representations during te
 - a dorsal / spatiotemporal signature indexed by gaze-based trajectory tracking
 
 In the task, participants viewed a rotating coin that briefly disappeared behind a background-matched occluder. The main comparison is between `implicit` trials (passive viewing, minimal intentional demand) and `explicit` trials (instructed imagery), with `perception` used as a reference phase.
+
+Primary inferential analyses focus on occlusion-onset trials. The dorsal trajectory metric summarizes the `7-12 s` occlusion window, and the ventral pupil metric uses a `0-7 s` baseline with an `8-12 s` response window.
 
 The central result of the thesis is that gaze-based trajectory tracking was reduced during passive viewing relative to instructed imagery, whereas pupil-based luminance responses were comparatively stable across phases. This supports pathway-specific differences in the automaticity of internal visual representations.
 

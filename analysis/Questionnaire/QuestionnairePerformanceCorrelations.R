@@ -4,7 +4,7 @@ library(readxl)
 library(ggplot2)
 
 default_info <- "data/metadata/Participants_info.xlsx"
-default_perf <- "data/processed/within_phase_participant_coupling_summary.csv"
+default_perf <- "outputs/Trial_decoupling/within_phase_participant_coupling_summary.csv"
 default_output_dir <- "outputs/Questionnaire_analysis"
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -25,6 +25,10 @@ output_plot_vosi_s_ve <- file.path(output_dir, "questionnaire_vosi_s_vs_ve.png")
 output_plot_vviq_de <- file.path(output_dir, "questionnaire_vviq_vs_de.png")
 output_plot_vosi_o_de <- file.path(output_dir, "questionnaire_vosi_o_vs_de.png")
 output_plot_vosi_s_de <- file.path(output_dir, "questionnaire_vosi_s_vs_de.png")
+
+# Optional per-plot participant exclusions; keep empty unless a specific rerun requires them.
+exclude_vi_participants <- character(0)
+exclude_ve_participants <- character(0)
 
 pad_id <- function(x) {
   x_chr <- trimws(as.character(x))
