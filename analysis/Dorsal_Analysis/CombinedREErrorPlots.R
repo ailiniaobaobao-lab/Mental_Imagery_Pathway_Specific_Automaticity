@@ -1,0 +1,143 @@
+library(dplyr) # data wrangling
+library(ggplot2) # plotting
+
+# ==== Input/Output ====
+ventral_path <- "data/processed/ventral_trial_responses.csv"
+dorsal_path <- "data/processed/dorsal_trial_errors.csv"
+output_dir <- "outputs/PupilSize_Raw"
+if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+
+out_exp_imp <- file.path(output_dir, "combined_rmse_error_explicit_implicit.png")
+out_exp_imp_per <- file.path(output_dir, "combined_rmse_error_explicit_implicit_perception.png")
+
+exclude_participants <- c(11191401, 11191503, 11210905, 11241311, 11241210)
+
+# Load ventral and dorsal trial tables used to build the combined error plots.
+ventral <- read.csv(ventral_path, stringsAsFactors = FALSE)
+dorsal <- read.csv(dorsal_path, stringsAsFactors = FALSE)
+
+ventral_df <- ventral %>%
+  mutate(
+    phase = case_when(
+      phase == "phase_i" ~ "implicit",
+      phase == "phase_e" ~ "explicit",
+      phase == "phase_p" ~ "perception",
+      TRUE ~ NA_character_
+    )
+  ) %>%
+  filter(!is.na(pupil_response), !is.na(phase), !is.na(participant)) %>%
+  filter(!participant %in% exclude_participants) %>%
+  transmute(
+    participant,
+    phase,
+    pathway = "ventral",
+    dv_raw = pupil_response
+  )
+
+dorsal_df <- dorsal %>%
+  mutate(
+    phase = as.character(phase)
+  ) %>%
+  filter(!is.na(traj_rmse), !is.na(phase), !is.na(participant)) %>%
+  filter(!participant %in% exclude_participants) %>%
+  transmute(
+    participant,
+    phase,
+    pathway = "dorsal",
+    dv_raw = traj_rmse
+  )
+
+# Standardize both pathways to a shared plotting scale within each pathway.
+build_plot_data <- function(phases) {
+  combined <- bind_rows(
+    ventral_df %>% filter(phase %in% phases),
+    dorsal_df %>% filter(phase %in% phases)
+  ) %>%
+    mutate(
+      phase = factor(phase, levels = phases),
+      pathway = factor(pathway, levels = c("ventral", "dorsal"))
+    ) %>%
+    group_by(pathway) %>%
+    mutate(dv_z = as.numeric(scale(dv_raw))) %>%
+    ungroup()
+
+  participant_means <- combined %>%
+    group_by(participant, phase, pathway) %>%
+    summarize(dv_z = mean(dv_z, na.rm = TRUE), .groups = "drop")
+
+  summary_df <- participant_means %>%
+    group_by(phase, pathway) %>%
+    summarize(
+      mean_dv = mean(dv_z, na.rm = TRUE),
+      se = sd(dv_z, na.rm = TRUE) / sqrt(n()),
+      n = n(),
+      .groups = "drop"
+    )
+
+  list(participant_means = participant_means, summary_df = summary_df)
+}
+
+# Plot participant summaries together with phase-level means for each pathway.
+plot_combined <- function(plot_data, title, out_path, ncol_facets) {
+  participant_means <- plot_data$participant_means
+  summary_df <- plot_data$summary_df
+
+  p <- ggplot() +
+    geom_col(
+      data = summary_df,
+      aes(x = pathway, y = mean_dv, fill = pathway),
+      width = 0.6,
+      alpha = 0.6
+    ) +
+    geom_errorbar(
+      data = summary_df,
+      aes(x = pathway, y = mean_dv, ymin = mean_dv - se, ymax = mean_dv + se),
+      width = 0.15,
+      color = "#444444"
+    ) +
+    geom_line(
+      data = participant_means,
+      aes(x = pathway, y = dv_z, group = participant),
+      color = "#666666",
+      alpha = 0.35
+    ) +
+    geom_point(
+      data = participant_means,
+      aes(x = pathway, y = dv_z, color = pathway),
+      position = position_jitter(width = 0.05, height = 0),
+      size = 2,
+      alpha = 0.8
+    ) +
+    facet_wrap(~phase, ncol = ncol_facets) +
+    labs(
+      title = title,
+      x = NULL,
+      y = "Z score (dorsal = RMSE; lower is better)"
+    ) +
+    theme_minimal(base_size = 12) +
+    theme(
+      legend.position = "none",
+      plot.title = element_text(face = "bold"),
+      panel.grid.minor = element_blank()
+    )
+
+  ggsave(out_path, p, width = 10, height = 5, dpi = 300)
+  cat("✅ Saved:", out_path, "\n")
+}
+
+# Compare the two pathways first with explicit/implicit only, then with perception included.
+data_exp_imp <- build_plot_data(c("explicit", "implicit"))
+plot_combined(
+  data_exp_imp,
+  "Combined z score by pathway (explicit vs implicit)",
+  out_exp_imp,
+  ncol_facets = 2
+)
+
+data_exp_imp_per <- build_plot_data(c("explicit", "implicit", "perception"))
+plot_combined(
+  data_exp_imp_per,
+  "Combined z score by pathway (explicit/implicit/perception)",
+  out_exp_imp_per,
+  ncol_facets = 3
+)
